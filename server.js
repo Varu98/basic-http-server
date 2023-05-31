@@ -12,6 +12,10 @@ const USERS = [];
 
 const SUBMISSION = [];
 
+app.get("/", function (req, res) {
+  res.send("Server is listening");
+});
+
 app.post("/signup", function (req, res) {
   // Add logic to decode body
   // body should have email and password
@@ -45,9 +49,11 @@ app.post("/login", function (req, res) {
   // Also send back a token (any random string will do for now)
   // If the password is not the same, return back 401 status code to the client
 
-  const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ error: "Email and Password are required" });
+  const { email, password, role } = req.body;
+  if (!email || !password || role)
+    return res
+      .status(400)
+      .json({ error: "Role,Email and Password are required" });
 
   const user = USERS.find((user) => user.email === email);
 
@@ -74,12 +80,24 @@ app.get("/submissions", function (req, res) {
 app.post("/submissions", function (req, res) {
   // let the user submit a problem, randomly accept or reject the solution
   // Store the submission in the SUBMISSION array above
-  res.send("Hello World from route 4!");
+  SUBMISSION.push(req.body);
+  res.status(200).json(SUBMISSION);
 });
 
-// leaving as hard todos
-// Create a route that lets an admin add a new problem
-// ensure that only admins can do that.
+app.post("/add-problem", function (req, res) {
+  // leaving as hard todos
+  // Create a route that lets an admin add a new problem
+  // ensure that only admins can do that.
+  const { role, problem } = req.body;
+  if (!role) res.status(401).json({ error: "role is required" });
+  const isAdmin = role === "admin";
+  if (isAdmin) {
+    const { title, description, testCases } = problem;
+    if (!title || !description || !testCases)
+      return res.status(401).send({ error: "missing keys in problem" });
+    QUESTIONS.push(problem);
+  }
+});
 
 app.listen(port, function () {
   console.log(`Example app listening on port ${port}`);
