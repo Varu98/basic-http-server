@@ -1,9 +1,13 @@
 const express = require("express");
+const bodyParser = require("body-parser");
+var jwt = require("jsonwebtoken");
+const JWT_SECRET = "this is a secret token ssshhhh!!!";
+const { auth } = require("./middleware");
 const app = express();
 const port = 5000;
-const bodyParser = require("body-parser");
+const jsonParser = bodyParser.json();
 
-app.use(bodyParser.json());
+app.use(jsonParser);
 const USERS = [];
 
 app.get("/", (req, res) => {
@@ -11,10 +15,6 @@ app.get("/", (req, res) => {
 });
 
 app.post("/signup", (req, res) => {
-  // Add logic to decode body
-  // body should have email and password
-  //Store email and password (as is for now) in the USERS array above (only if the user with the given email doesnt exist)
-  // return back 200 status code to the client
   const { email, password } = req.body;
   if (!email || !password)
     return res.status(400).json({ error: "email and password are required" });
@@ -32,7 +32,13 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
   const userExists = USERS.find((user) => user.email === email);
-  if (userExists) return res.status(200).json();
+  const token = jwt.sign({ email }, JWT_SECRET);
+  if (userExists) return res.status(200).json({ token });
+});
+
+app.get("/me", auth, (req, res) => {
+  const user = USERS.find((user) => user.email === req.email);
+  res.json({ email: user.email, id: 2 });
 });
 
 app.listen(port, () => {
