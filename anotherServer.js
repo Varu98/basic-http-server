@@ -3,12 +3,15 @@ const bodyParser = require("body-parser");
 var jwt = require("jsonwebtoken");
 const JWT_SECRET = "this is a secret token ssshhhh!!!";
 const { auth } = require("./middleware");
+const { QUESTIONS } = require("./questions");
 const app = express();
 const port = 5000;
 const jsonParser = bodyParser.json();
 
 app.use(jsonParser);
+
 const USERS = [];
+const SUBMISSIONS = [];
 
 app.get("/", (req, res) => {
   res.send("Hello World");
@@ -39,6 +42,31 @@ app.post("/login", (req, res) => {
 app.get("/me", auth, (req, res) => {
   const user = USERS.find((user) => user.email === req.email);
   res.json({ email: user.email, id: 2 });
+});
+
+app.get("/problems", (req, res) => {
+  return res.status(200).json(QUESTIONS);
+});
+
+app.get("/problem/:id", (req, res) => {
+  const { id } = req.params;
+  const problem = QUESTIONS.find((problem) => problem.problemId === id);
+  console.log(problem);
+  return res.json({ problem });
+});
+
+app.get("/submission", auth, (req, res) => {
+  const { problemID, submission } = req.body;
+
+  const isCorrect = Math.random() < 0.5;
+
+  if (isCorrect) {
+    SUBMISSIONS.push({ problemID, submission, status: "Accepted" });
+    return res.json({ status: "Accepted" });
+  } else {
+    SUBMISSIONS.push({ problemID, submission, status: "Rejected" });
+    return res.json({ status: "Rejected" });
+  }
 });
 
 app.listen(port, () => {
